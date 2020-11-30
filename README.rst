@@ -13,8 +13,6 @@ telefonformat
         :target: https://telefonformat.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-Python Boilerplate contains all the boilerplate you need to create a Python package.
-
 * Free software: MIT license
 * Documentation: https://telefonformat.readthedocs.io.
 
