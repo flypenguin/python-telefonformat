@@ -33,27 +33,39 @@ class TestTelefonformat(unittest.TestCase):
         )
         for number in numbers:
             for country_code, leading_zero, wanted_result in results:
-                result, _ = format(number, country=country_code, leading_zero=leading_zero)
+                result = format(number, country=country_code, leading_zero=leading_zero)
                 self.assertEqual(result, wanted_result)
 
-    def test_001_add_digits(self):
+    def test_001_complex_numbers(self):
         """Test add digits, see https://is.gd/nNVq6Y """
         numbers = (
-            # this is wrong, no leading zero here. we can't do this yet.
             ("+49 10 12 999", "+49 (0)1012 999"),
-
-            # this is wrong, no leading zero here. we can't do this yet.
-            # also no REMAINING digits - the 999 is also not happening
-            ("+49 116 123 999", "+49 (0)116123 999"),
-
-            # this is wrong, no leading zero here. we can't do this yet.
-            # also no REMAINING digits - the 999 is also not happening
-            ("+49 118 12 999", "+49 (0)11812 999"),
+            ("+49 116 123 ", "+49 116123"),
+            ("+49 118 12 ", "+49 11812"),
+            ("110", "+49 110"),
+            ("112", "+49 112"),
 
             # this is correct now. roughly.
             ("+49 19 123 999", "+49 (0)19123 999"),
             ("+49 31 1 999", "+49 (0)311 999"),
         )
         for check_me, wanted_result in numbers:
-            result, _ = format(check_me)
+            result = format(check_me)
+            self.assertEqual(result, wanted_result)
+
+    def test_002_complex_numbers_no_country(self):
+        """Test add digits, see https://is.gd/nNVq6Y """
+        numbers = (
+            ("+49 10 12 999", "01012 999"),
+            ("+49 116 123 ", "116123"),
+            ("+49 118 12 ", "11812"),
+            ("110", "110"),
+            ("112", "112"),
+
+            # this is correct now. roughly.
+            ("+49 19 123 999", "019123 999"),
+            ("+49 31 1 999", "0311 999"),
+        )
+        for check_me, wanted_result in numbers:
+            result = format(check_me, country=False)
             self.assertEqual(result, wanted_result)

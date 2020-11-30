@@ -7,7 +7,9 @@ import re
 from .vorwahlen import vorwahlen
 
 
-def format(number, country=True, leading_zero=True):
+def split(number):
+    """Returns (prefix, area, number)"""
+
     nr_ = re.sub("[^0-9+]", "", number)
 
     if nr_.startswith("+49"):
@@ -25,19 +27,53 @@ def format(number, country=True, leading_zero=True):
         area_code = nr_[:cnt]
         if nr_[:cnt] in vorwahlen:
             info = vorwahlen[area_code]
-            city = info[1]
-            if info[2]:
-                area_code = nr_[:(cnt + info[2])]
-            phone_number = nr_[(cnt+info[2]):]
+            if info.add_digits:
+                area_code = nr_[:(cnt + info.add_digits)]
+            phone_number = nr_[(cnt+info.add_digits):]
+
+            if info.is_final:
+                if phone_number:
+                    raise ValueError("Surplus digits: " + phone_number)
+                else:
+                    phone_number = area_code
+                    area_code = ""
             break
     else:
         return None
 
-    formatted_number = ""
-    if country:
-        formatted_number = "+49 (0)" if leading_zero else "+49 "
-    else:
-        formatted_number = "0"
-    formatted_number += area_code + " " + phone_number
+    return (
+        "0" if not info.is_final else "",
+        area_code,
+        phone_number,
+        info.info,
+    )
 
-    return formatted_number, city
+
+def format_split(info_tuple, country=True, leading_zero=True):
+    prefix, area_code, phone_number, info = info_tuple
+
+    rv = ""
+    if country:
+        if leading_zero and prefix:
+            rv = "+49 (" + prefix + ")"
+        else:
+            rv = "+49 "
+    elif prefix:
+        rv += prefix
+
+    if prefix:
+        if not area_code:
+            raise RuntimeError("Invalid state - prefix but NO area_code defined - " + str(info_tuple))
+        if not phone_number:
+            raise RuntimeError("Invalid state - prefix but ONLY area code defined - " + str(info_tuple))
+        rv += area_code + " " + phone_number
+    else:
+        if area_code:
+            rv += area_code + " "
+        rv += phone_number
+
+    return rv
+
+
+def format(number, country=True, leading_zero=True):
+    return format_split(split(number), country=country, leading_zero=leading_zero)
